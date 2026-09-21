@@ -1,0 +1,59 @@
+replicaCount: 3
+
+image:
+  repository: linkguard
+  tag: "0.3"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  automount: false
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+env:
+  redisHost: redis
+  redisPort: "6379"
+  rateLimitPerMinute: "3"
+
+secret:
+  existingSecret: linkguard-api-secret
+  apiKeys: ""
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+redis:
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+
+  service:
+    port: 6379
+
+  storage:
+    size: 1Gi
+    accessMode: ReadWriteOnce
+    storageClass: standard
+
+networkPolicy:
+  enabled: true

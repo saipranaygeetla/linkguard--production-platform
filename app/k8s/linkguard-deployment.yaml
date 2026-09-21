@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: linkguard
+  namespace: linkguard
+
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: linkguard
+
+  template:
+    metadata:
+      labels:
+        app: linkguard
+        version: "v2"
+
+    spec:
+      containers:
+        - name: linkguard
+          image: linkguard:0.1
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8000
+
+          command:
+            - python
+            - -c
+            - |
+              print("Container starting...")
+              raise Exception("Intentional crash for Kubernetes troubleshooting")
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          env:
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: API_KEYS
+              value: dev-key-123
+            - name: RATE_LIMIT_PER_MINUTE
+              value: "3"
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

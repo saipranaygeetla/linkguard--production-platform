@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "linkguard-chart.fullname" . }}
+  labels:
+    {{- include "linkguard-chart.labels" . | nindent 4 }}
+
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+
+  selector:
+    matchLabels:
+      {{- include "linkguard-chart.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "linkguard-chart.selectorLabels" . | nindent 8 }}
+
+    spec:
+      serviceAccountName: {{ include "linkguard-chart.serviceAccountName" . }}
+
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: linkguard
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.env.redisHost | quote }}
+
+            - name: REDIS_PORT
+              value: {{ .Values.env.redisPort | quote }}
+
+            - name: API_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.secret.existingSecret }}{{ .Values.secret.existingSecret }}{{ else }}{{ include "linkguard-chart.fullname" . }}{{ end }}
+                  key: API_KEYS
+
+            - name: RATE_LIMIT_PER_MINUTE
+              value: {{ .Values.env.rateLimitPerMinute | quote }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10

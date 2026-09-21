@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-local
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  linkguard:
+    build: .
+    container_name: linkguard-api
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      API_KEYS: dev-key-123
+      RATE_LIMIT_PER_MINUTE: "3"
+    depends_on:
+      redis:
+        condition: service_healthy

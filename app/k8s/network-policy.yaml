@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-ingress
+  namespace: linkguard
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: linkguard-chart
+      ports:
+        - protocol: TCP
+          port: 6379

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resource-test
+  namespace: linkguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resource-test
+  template:
+    metadata:
+      labels:
+        app: resource-test
+    spec:
+      containers:
+        - name: test
+          image: nginx:alpine
+          resources:
+            requests:
+              cpu: "1"
+              memory: "128Mi"

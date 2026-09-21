@@ -1,0 +1,28 @@
+replicaCount: 2
+
+image:
+  repository: linkguard
+  tag: "0.3"
+  pullPolicy: IfNotPresent
+
+env:
+  redisHost: redis
+  redisPort: "6379"
+  rateLimitPerMinute: "3"
+
+secret:
+  existingSecret: linkguard-api-secret
+  apiKeys: ""
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true

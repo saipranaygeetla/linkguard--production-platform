@@ -1,0 +1,28 @@
+replicaCount: 3
+
+image:
+  repository: YOUR_ARTIFACT_REGISTRY_REPOSITORY/linkguard
+  tag: "0.3"
+  pullPolicy: IfNotPresent
+
+env:
+  redisHost: redis
+  redisPort: "6379"
+  rateLimitPerMinute: "100"
+
+secret:
+  existingSecret: linkguard-api-secret
+  apiKeys: ""
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true
